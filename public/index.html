@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SolTrace Intelligence Terminal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+<body>
+  
+  <nav class="navbar">
+    <div class="nav-content">
+      <a href="/" class="brand" style="text-decoration: none; color: inherit;">
+        <div class="brand-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 397.7 311.7" class="solana-logo">
+            <defs>
+              <linearGradient id="sol-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#14F195" />
+                <stop offset="100%" stop-color="#9945FF" />
+              </linearGradient>
+            </defs>
+            <path fill="url(#sol-grad)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z"/>
+            <path fill="url(#sol-grad)" d="M64.6 3.8C67 1.4 70.3 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z"/>
+            <path fill="url(#sol-grad)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/>
+          </svg>
+        </div>
+        <span>SolTrace Pro</span>
+      </a>
+      <div class="search-container">
+        <form id="scan-form" class="search-form">
+          <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="address-input" placeholder="Initiate Target Hash..." required autocomplete="off" spellcheck="false" />
+          <button type="submit" id="submit-btn" aria-label="Search">
+            <span class="btn-text">Trace</span>
+            <div class="loader hidden"></div>
+          </button>
+        </form>
+        <div id="recent-dropdown" class="recent-dropdown hidden"></div>
+      </div>
+      <div class="nav-right" style="display:flex; align-items:center; gap: 15px;">
+        <span id="nav-tier-badge" class="badge mono hidden" style="background: rgba(153,69,255,0.1); color: #d838ff; border-color: rgba(153,69,255,0.3); border-radius: 4px; padding: 6px 10px; cursor: pointer;">[ FREE ]</span>
+        <button id="nav-btn-upgrade" class="action-pill hidden" style="padding: 6px 12px; font-size: 0.75rem; border-color: #38bdf8; color: #38bdf8; background: transparent;">Upgrade</button>
+        <button id="nav-btn-logout" class="action-pill hidden" style="padding: 6px 12px; font-size: 0.75rem; border-color: #fca5a5; color: #fca5a5; background: transparent; transition: all 0.2s;">Logout</button>
+        <a href="https://x.com/soltraces" target="_blank" class="social-connect" style="text-decoration: none; color: inherit;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.005 4.15H5.059z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div id="error-message" class="error-banner hidden"></div>
+
+  <!-- Phase 7: Three-Column Command Center Framework -->
+  <div class="command-center">
+
+    <!-- Left Intelligence Sidebar -->
+    <aside class="sidebar left-sidebar">
+       <div class="sidebar-header">
+          <div class="status-pulse"></div>
+          <span style="font-weight: 600; color: #14F195; font-family: 'JetBrains Mono'; font-size: 0.8rem; letter-spacing: 1px;">RPC: CONNECTED</span>
+       </div>
+       
+       <div class="sidebar-section">
+          <h4>⭐ TARGET WATCHLIST</h4>
+          <div id="watchlist-container" class="wl-list">
+             <!-- Injected via app.js -->
+             <div style="color: var(--text-muted); font-size: 0.8rem; padding: 1rem 0;">No active targets saved. Use the dashboard to pin addresses here.</div>
+          </div>
+       </div>
+
+
+    </aside>
+
+    <!-- Center Content Matrix -->
+    <div class="center-content">
+       <!-- Global Tab Router -->
+       <div class="tab-bar">
+         <button class="nav-tab active" data-tab="module-wallet">Wallet Scanner</button>
+         <button class="nav-tab" data-tab="module-token">Token Diagnostics</button>
+         <button class="nav-tab" data-tab="module-mempool">Mempool Stream</button>
+         <button class="nav-tab" data-tab="module-bots">Automation Hub</button>
+       </div>
+
+       <!-- MODULE 1: WALLET SCANNER -->
+       <div id="module-wallet" class="module-tab active">
+          <!-- Splash Screen -->
+          <div id="splash" class="splash" style="margin: auto;">
+         <div class="splash-icon">
+           <svg viewBox="0 0 24 24" width="64" height="64" stroke="currentColor" stroke-width="1" fill="none"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>
+         </div>
+         <h2>Command Interface Idle</h2>
+         <p>Input an absolute Solana hash into the router to decrypt structural pathways securely.</p>
+       </div>
+
+       <!-- Main Analytics Dashboard -->
+       <main id="results-container" class="dashboard hidden">
+         <div class="dash-header">
+            <div class="dash-title">
+             <h2>Intelligence Report</h2>
+             <div class="badge-group">
+               <div class="badge mono" id="res-address" style="cursor: pointer; text-decoration: underline;" title="Click to add custom tag">...</div>
+               <div class="badge alert-badge hidden pulse" id="whale-alert">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                  WHALE DETECTED
+               </div>
+               <div class="badge alert-badge hidden pulse" id="wash-alert" style="background: rgba(255, 69, 58, 0.15); color: #ff453a; border-color: #ff453a;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
+                  SYBIL LOOP
+               </div>
+               <div class="badge hidden" id="behavior-tag" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: #38bdf8; font-weight: bold; letter-spacing: 1px;">PROFILE UNKNOWN</div>
+             </div>
+           </div>
+           <div class="dash-meta">
+             <span class="meta-label">Verified Blocks</span>
+             <span class="meta-value hl-blue tally-num" id="res-transfers" data-val="0">0</span>
+           </div>
+         </div>
+
+         <!-- Live Hardware Portfolios -->
+         <div class="live-holdings" id="live-balances-container">
+           <div class="holding-card">
+             <span class="hl-label">Hardware SOL</span>
+             <span class="hl-value" id="live-sol">0.000</span>
+           </div>
+           <div class="holding-card">
+             <span class="hl-label">Hardware USDC</span>
+             <span class="hl-value" id="live-usdc">0.00</span>
+           </div>
+           <div class="holding-card memecoin">
+             <span class="hl-label">DEX Executions</span>
+             <span class="hl-value hl-blue" id="swap-count">0</span>
+           </div>
+           <div class="holding-card net-worth">
+             <span class="hl-label">Liquid Exposure</span>
+             <span class="hl-value txt-teal pulse" style="text-shadow: 0 0 15px rgba(20,241,149,0.3);" id="live-worth">$0.00</span>
+           </div>
+         </div>
+
+         <!-- UI Top Controls -->
+         <div class="dash-controls">
+           <div class="dash-btn-group">
+              <button id="btn-export" class="action-pill" aria-label="Export Data">
+                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                 <span>CSV Extract</span>
+              </button>
+              <button id="btn-share" class="action-pill">
+                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                 <span>Share Link</span>
+              </button>
+              <button id="btn-watchlist" class="action-pill">
+                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                 <span id="label-watchlist">Pin Target</span>
+              </button>
+              <button id="btn-compare" class="action-pill">
+                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                 <span>Compare Targets</span>
+              </button>
+              <button id="btn-x" class="action-pill">
+                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.005 4.15H5.059z"></path></svg>
+                 <span>X Search</span>
+              </button>
+           </div>
+
+           <div class="currency-toggle">
+             <button id="btn-sol" class="toggle-btn active">Native SOL</button>
+             <button id="btn-usdc" class="toggle-btn">USDC SPL</button>
+           </div>
+         </div>
+
+         <!-- 2x2 Fast Timeframe Grid -->
+         <div class="timeframe-grid">
+           <!-- 24h -->
+           <div class="time-card">
+             <div class="card-header">
+               <h3>Last 24 Hours</h3>
+               <span class="status-dot pulse"></span>
+             </div>
+             <div class="metrics">
+               <div class="metric-row"><span class="label">Volume In</span><span class="value txt-teal tally-num" id="daily-received">0</span></div>
+               <div class="metric-row"><span class="label">Volume Out</span><span class="value txt-crimson tally-num" id="daily-sent">0</span></div>
+               <div class="divider"></div>
+               <div class="metric-row"><span class="label">Net Flow</span><span class="value tally-num" id="daily-net">0</span></div>
+               <div class="divider"></div>
+               <div class="metric-row small"><span class="label">Largest In</span><a href="#" target="_blank" rel="noopener noreferrer" class="value tx-link" id="daily-high-rec">0</a></div>
+               <div class="metric-row small"><span class="label">Largest Out</span><a href="#" target="_blank" rel="noopener noreferrer" class="value tx-link" id="daily-high-sent">0</a></div>
+             </div>
+           </div>
+
+           <!-- 7d -->
+           <div class="time-card">
+             <div class="card-header"><h3>Last 7 Days</h3></div>
+             <div class="metrics">
+               <div class="metric-row"><span class="label">Volume In</span><span class="value txt-teal tally-num" id="weekly-received">0</span></div>
+               <div class="metric-row"><span class="label">Volume Out</span><span class="value txt-crimson tally-num" id="weekly-sent">0</span></div>
+               <div class="divider"></div>
+               <div class="metric-row"><span class="label">Net Flow</span><span class="value tally-num" id="weekly-net">0</span></div>
+               <div class="divider"></div>
+               <div class="metric-row small"><span class="label">Largest In</span><a href="#" target="_blank" rel="noopener noreferrer" class="value tx-link" id="weekly-high-rec">0</a></div>
+               <div class="metric-row small"><span class="label">Largest Out</span><a href="#" target="_blank" rel="noopener noreferrer" class="value tx-link" id="weekly-high-sent">0</a></div>
+             </div>
+           </div>
+
+           <!-- 30d -->
+           <div class="time-card">
+             <div class="card-header"><h3>Last 30 Days</h3></div>
+             <div class="metrics">
+               <div class="metric-row"><span class="label">Volume In</span><span class="value txt-teal tally-num" id="monthly-received">0</span></div>
+               <div class="metric-row"><span class="label">Volume Out</span><span class="value txt-crimson tally-num" id="monthly-sent">0</span></div>
+               <div class="divider"></div>
+               <div class="metric-row"><span class="label">Net Flow</span><span class="value tally-num" id="monthly-net">0</span></div>
+               <div class="divider"></div>
+               <div class="metric-row small"><span class="label">Largest In</span><a href="#" target="_blank" rel="noopener noreferrer" class="value tx-link" id="monthly-high-rec">0</a></div>
+               <div class="metric-row small"><span class="label">Largest Out</span><a href="#" target="_blank" rel="noopener noreferrer" class="value tx-link" id="monthly-high-sent">0</a></div>
+             </div>
+           </div>
+
+           <!-- All Time -->
+           <div class="time-card all-time">
+             <div class="card-header"><h3>All Time History</h3></div>
+             <div class="metrics">
+               <div class="metric-row"><span class="label">Volume In</span><span class="value txt-teal tally-num" id="all-received">0</span></div>
+               <div class="metric-row"><span class="label">Volume Out</span><span class="value txt-crimson tally-num" id="all-sent">0</span></div>
+               <div class="divider"></div>
+               <div class="metric-row"><span class="label">Net Flow</span><span class="value tally-num" id="all-net">0</span></div>
+               <div class="divider"></div>
+               <div class="metric-row small"><span class="label">Largest In</span><a href="#" target="_blank" rel="noopener noreferrer" class="value tx-link" id="all-high-rec">0</a></div>
+               <div class="metric-row small"><span class="label">Largest Out</span><a href="#" target="_blank" rel="noopener noreferrer" class="value tx-link" id="all-high-sent">0</a></div>
+             </div>
+           </div>
+         </div>
+
+         <!-- MetaSleuth Physical Web Engine -->
+         <div class="card glass-card" style="margin-top: 20px;">
+            <div class="card-header" style="margin-bottom: 0;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                 <h3>Flow Dynamics</h3>
+                 <span class="badge" style="background: rgba(153, 69, 255, 0.1); color: var(--accent-purple);">PHYSICS ENGINE ONLINE</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                 <span style="font-size: 0.75rem; color: var(--text-muted);">Min Vol (SOL):</span>
+                 <input type="range" id="flow-filter" min="0" max="1000" step="1" value="0" style="width: 100px; accent-color: #9945FF; cursor: pointer;">
+                 <span id="flow-filter-val" style="font-size: 0.85rem; font-family: 'JetBrains Mono'; font-weight: bold; width: 40px;">0</span>
+              </div>
+            </div>
+            <div id="flow-network" style="width: 100%; height: 450px; margin-top: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2);"></div>
+         </div>
+
+         <div class="bottom-panels" style="margin-top: 20px;">
+            <div class="panel chart-panel">
+               <div class="panel-header">
+                 <h3>30-Day Activity Heatmap</h3>
+               </div>
+               <div class="chart-container">
+                 <canvas id="activityChart"></canvas>
+               </div>
+            </div>
+            <div class="panel counterparties-panel">
+               <div class="panel-header">
+                 <h3>Decrypted Entities Payload</h3>
+               </div>
+               <div class="cp-list-container">
+                  <ul class="cp-list" id="cp-list"></ul>
+               </div>
+            </div>
+         </div>
+
+         <!-- Phase 9: Forensic Modules -->
+         <div class="bottom-panels" style="margin-top: 20px; grid-template-columns: 1fr 1fr;">
+            <div class="panel">
+               <div class="panel-header">
+                 <h3>Timezone Radar (UTC)</h3>
+               </div>
+               <div class="chart-container" style="height: 300px;">
+                 <canvas id="radarChart"></canvas>
+               </div>
+            </div>
+            <div class="panel">
+               <div class="panel-header">
+                 <h3>SPL Token Matrix</h3>
+               </div>
+               <div class="cp-list-container" style="max-height: 300px; overflow-y: auto;">
+                  <ul class="cp-list" id="token-matrix-list">
+                     <li style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 2rem 0; list-style: none;">Awaiting Token Payload...</li>
+                  </ul>
+               </div>
+            </div>
+         </div>
+
+         <!-- Phase 11: Action Feed & Allocation -->
+         <div class="bottom-panels" style="margin-top: 20px; grid-template-columns: 1.5fr 1fr 1fr;">
+            <div class="panel">
+               <div class="panel-header">
+                 <h3>Live Activity Feed</h3>
+               </div>
+               <div class="cp-list-container" style="max-height: 350px; overflow-y: auto;">
+                  <ul class="cp-list" id="recent-feed-list">
+                     <li style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 2rem 0; list-style: none;">Awaiting Transaction Stream...</li>
+                  </ul>
+               </div>
+            </div>
+            <div class="panel">
+               <div class="panel-header">
+                 <h3>Portfolio Allocation</h3>
+               </div>
+               <div class="chart-container" style="height: 300px; display: flex; justify-content: center; align-items: center;">
+                 <canvas id="allocationChart"></canvas>
+               </div>
+            </div>
+            <div class="panel">
+               <div class="panel-header">
+                 <h3>Contract Profiler</h3>
+               </div>
+               <div class="chart-container" style="height: 300px; display: flex; justify-content: center; align-items: center;">
+                 <canvas id="profileChart"></canvas>
+               </div>
+            </div>
+         </div>
+
+         <!-- Phase 14: Deep Genesis Tracer -->
+         <div class="card glass-card" style="margin-top: 20px;">
+           <div class="card-header" style="margin-bottom: 0;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                 <h3>The Genesis Tracer</h3>
+                 <span class="badge" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8;">DEEP FORENSICS</span>
+              </div>
+           </div>
+           <div style="margin-top: 15px; padding: 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px;">
+              <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; max-width: 500px; line-height: 1.5;">
+                Execute a deep backward pagination scan to trace the absolute first block hash of this wallet on the blockchain and derive its genesis funding source.
+              </p>
+              <button id="btn-genesis-trace" class="action-btn" style="padding: 10px 20px; font-weight: bold; cursor: pointer;">Initiate Genesis Trace</button>
+              
+              <div id="genesis-results" class="hidden" style="width: 100%; max-width: 600px; margin-top: 20px; padding: 20px; border-radius: 8px; background: rgba(153,69,255,0.05); border: 1px dashed rgba(153,69,255,0.3);">
+                  <div style="display:flex; justify-content:space-between; margin-bottom: 10px;">
+                     <span style="color: var(--text-muted); font-size: 0.8rem;">Founding Contract / Funder</span>
+                     <span id="gen-source" style="font-family: 'JetBrains Mono'; font-weight: bold; color: #14F195;">...</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; margin-bottom: 10px;">
+                     <span style="color: var(--text-muted); font-size: 0.8rem;">Initial Funding Amount</span>
+                     <span id="gen-amount" style="font-family: 'JetBrains Mono'; color: var(--text-main);">...</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; margin-bottom: 10px;">
+                     <span style="color: var(--text-muted); font-size: 0.8rem;">Genesis Date (UTC)</span>
+                     <span id="gen-date" style="font-family: 'JetBrains Mono'; color: var(--text-main);">...</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                     <span style="color: var(--text-muted); font-size: 0.8rem;">Transaction Receipt</span>
+                     <a id="gen-sig" href="#" target="_blank" style="font-family: 'JetBrains Mono'; font-size: 0.8rem; color: #38bdf8; text-decoration: underline;">...</a>
+                  </div>
+              </div>
+           </div>
+         </div>
+
+         </div> <!-- END MODULE 1: WALLET SCANNER -->
+
+         <!-- MODULE 2: TOKEN X-RAY -->
+         <div id="module-token" class="module-tab hidden">
+            <div class="splash" style="max-width: 600px; margin: 4rem auto;">
+               <h2 style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--text-main); font-weight: 700; letter-spacing: -0.5px;">Token Diagnostics</h2>
+               <p style="color: var(--text-muted); margin-bottom: 2rem;">Scan any SPL token mint to instantly map developer wallets, top holder distribution, and liquidity pair mechanics.</p>
+               <div class="search-container" style="max-width: 100%; margin: 0 auto;">
+                 <div class="search-form">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" id="token-input" placeholder="Paste Token Contract Address..." autocomplete="off" style="padding: 18px 16px 18px 45px; font-size: 1rem;">
+                 </div>
+               </div>
+               <button class="action-btn" style="margin-top: 15px; width: 100%;">Execute Deep X-Ray</button>
+            </div>
+         </div>
+
+         <!-- MODULE 3: MEMPOOL SNIPER -->
+         <div id="module-mempool" class="module-tab hidden">
+            <div style="display: flex; flex-direction: column; align-items:center; justify-content:center; padding: 5rem 0;">
+                <div class="status-pulse" style="width: 20px; height: 20px; margin-bottom: 2rem; box-shadow: 0 0 20px #14F195;"></div>
+                <h2 style="font-size: 2rem; margin-bottom: 1rem; font-weight: 700;">Awaiting Mempool Stream</h2>
+                <p style="color: var(--text-muted); max-width: 400px; text-align: center; line-height: 1.5;">Establishing high-speed WebSocket connection to Raydium and Pump.fun RPC indexing nodes...</p>
+            </div>
+         </div>
+
+         <!-- MODULE 4: BOT AUTOMATIONS -->
+         <div id="module-bots" class="module-tab hidden">
+            <div class="splash" style="max-width: 600px; margin: 4rem auto;">
+               <h2 style="font-size: 2rem; margin-bottom: 1rem; font-weight: 700;">Telegram Bot Hub</h2>
+               <p style="color: var(--text-muted); margin-bottom: 2rem;">Export your discovered intelligence directly into execution scripts for Trojan, BonkBot, and Photon routers.</p>
+               <div class="panel" style="text-align: left; background: rgba(56, 189, 248, 0.05); border-color: rgba(56, 189, 248, 0.2);">
+                  <h3 style="color: #38bdf8;">Auto-Sniper Script Generator</h3>
+                  <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; line-height: 1.5;">Select pinned wallets from your Watchlist to format generic clone triggers or mass `/buy` strings.</p>
+               </div>
+            </div>
+         </div>
+
+       </main>
+    </div>
+
+    <!-- Right Market Feed Sidebar -->
+    <aside class="sidebar right-sidebar">
+       <div class="sidebar-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          <span style="font-weight: 600; color: #38bdf8; font-family: 'JetBrains Mono'; font-size: 0.8rem; letter-spacing: 1px;">LIVE ORACLES</span>
+       </div>
+       <div class="market-feed">
+          <div class="ticker-card" id="ticker-btc">
+             <div class="t-top"><span class="t-asset">BTC/USD</span><span class="t-pct" id="pct-btc">+0.00%</span></div>
+             <div class="t-price hl-blue" id="price-btc">...</div>
+          </div>
+          <div class="ticker-card" id="ticker-eth">
+             <div class="t-top"><span class="t-asset">ETH/USD</span><span class="t-pct" id="pct-eth">+0.00%</span></div>
+             <div class="t-price hl-blue" id="price-eth">...</div>
+          </div>
+          <div class="ticker-card" id="ticker-sol">
+             <div class="t-top"><span class="t-asset">SOL/USD</span><span class="t-pct" id="pct-sol">+0.00%</span></div>
+             <div class="t-price hl-blue" id="price-sol">...</div>
+          </div>
+       </div>
+    </aside>
+
+  </div> <!-- End command-center -->
+
+  <!-- Custom Naming Modal -->
+  <div id="name-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h3 style="margin-bottom: 0.5rem; font-weight: 700;">Target Classification</h3>
+      <p style="font-size: 0.85rem; color: #8b949e; margin-bottom: 1rem;">Assign an encrypted label for local tracking.</p>
+      <input type="text" id="modal-name-input" placeholder="e.g. Binance Deposit Node..." autocomplete="off">
+      <div class="modal-actions">
+        <button id="modal-cancel" class="toggle-btn" style="color: #c9d1d9;">Cancel</button>
+        <button id="modal-save" class="action-pill" style="border-color: #9945FF; color: #fff; background: rgba(153,69,255,0.2);">Save Label</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Intersection Engine Modal -->
+  <div id="int-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 500px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+        <h3 style="margin-bottom: 0; font-weight: 700;">Intersection Engine</h3>
+        <span class="badge" style="background: rgba(153, 69, 255, 0.1); color: var(--accent-purple);">CO-SIGNER ANALYSIS</span>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Initialize a dual-target mathematical hash correlation.</p>
+      
+      <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:1.5rem;">
+        <input type="text" id="int-a" placeholder="Target A Address..." autocomplete="off">
+        <input type="text" id="int-b" placeholder="Target B Address..." autocomplete="off">
+      </div>
+
+      <div id="int-results" class="hidden" style="margin-bottom: 1.5rem; max-height: 200px; overflow-y:auto; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 10px;">
+         <div id="int-status" style="font-size: 0.8rem; color: #38bdf8; font-weight: bold; margin-bottom: 10px;"></div>
+         <ul id="int-list" class="cp-list"></ul>
+      </div>
+
+      <div class="modal-actions">
+        <button id="int-cancel" class="toggle-btn" style="color: #c9d1d9;">Close</button>
+        <button id="int-run" class="action-pill" style="border-color: #38bdf8; color: #fff; background: rgba(56, 189, 248, 0.15);">Execute Scan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transaction Inspector Modal -->
+  <div id="tx-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 500px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+        <h3 style="margin-bottom: 0; font-weight: 700;">Deep Inspection</h3>
+        <span class="badge" style="background: rgba(153, 69, 255, 0.1); color: var(--accent-purple);">TX DECRYPTED</span>
+      </div>
+      
+      <div style="display:flex; flex-direction:column; gap:15px; margin-bottom:1.5rem; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 15px; border: 1px solid rgba(255,255,255,0.05);">
+         <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted); font-size: 0.8rem;">Signature</span>
+            <a id="tx-m-sig" href="#" target="_blank" style="color:var(--text-main); font-family:'JetBrains Mono'; font-size: 0.8rem;">...</a>
+         </div>
+         <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted); font-size: 0.8rem;">Timestamp</span>
+            <span id="tx-m-time" style="color:var(--text-main); font-family:'JetBrains Mono'; font-size: 0.8rem;">...</span>
+         </div>
+         <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted); font-size: 0.8rem;">Action Type</span>
+            <span id="tx-m-type" style="color:#14F195; font-family:'JetBrains Mono'; font-size: 0.8rem; font-weight:bold;">...</span>
+         </div>
+         <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted); font-size: 0.8rem;">Value Moved</span>
+            <span id="tx-m-flow" style="color:var(--text-main); font-family:'JetBrains Mono'; font-size: 0.8rem; font-weight:bold;">...</span>
+         </div>
+         <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted); font-size: 0.8rem;">Network Fee</span>
+            <span id="tx-m-fee" style="color:#fca5a5; font-family:'JetBrains Mono'; font-size: 0.8rem;">...</span>
+         </div>
+         <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted); font-size: 0.8rem;">Interacted Node</span>
+            <a id="tx-m-counter" href="#" target="_blank" style="color:#38bdf8; font-family:'JetBrains Mono'; font-size: 0.8rem;">...</a>
+         </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="tx-m-close" class="toggle-btn" style="color: #c9d1d9; width: 100%; background: rgba(255,255,255,0.05);">Close Inspector</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flow Node Inspector Modal -->
+  <div id="node-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 400px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+        <h3 style="margin-bottom: 0; font-weight: 700;">Entity Breakdown</h3>
+        <span class="badge" style="background: rgba(20, 241, 149, 0.1); color: #14F195;">NODE DECRYPTED</span>
+      </div>
+      
+      <div style="display:flex; flex-direction:column; gap:15px; margin-bottom:1.5rem; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 15px; border: 1px solid rgba(255,255,255,0.05);">
+         <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted); font-size: 0.8rem;">Address</span>
+            <a id="node-m-addr" href="#" target="_blank" style="color:#38bdf8; font-family:'JetBrains Mono'; font-size: 0.8rem;">...</a>
+         </div>
+         <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted); font-size: 0.8rem;">Total Interactions</span>
+            <span id="node-m-int" style="color:var(--text-main); font-family:'JetBrains Mono'; font-size: 0.8rem;">...</span>
+         </div>
+         <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted); font-size: 0.8rem;">Total SOL Vol.</span>
+            <span id="node-m-vol" style="color:#9945FF; font-family:'JetBrains Mono'; font-size: 0.8rem; font-weight:bold;">...</span>
+         </div>
+         <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted); font-size: 0.8rem;">Net Flow</span>
+            <span id="node-m-flow" style="color:var(--text-main); font-family:'JetBrains Mono'; font-size: 0.8rem; font-weight:bold;">...</span>
+         </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="node-m-close" class="toggle-btn" style="color: #c9d1d9; width: 100%; background: rgba(255,255,255,0.05);">Close Details</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 10: Auth Wall Modal -->
+  <div id="auth-modal" class="modal-overlay" style="z-index: 10000; backdrop-filter: blur(20px); background: rgba(3, 4, 7, 0.95); display: flex;">
+    <div class="modal-content" style="max-width: 380px; text-align: center; border-color: rgba(153, 69, 255, 0.5); box-shadow: 0 0 80px rgba(153,69,255,0.15);">
+      <h2 style="font-weight: 700; font-size: 1.8rem; margin-bottom: 5px; font-family: 'JetBrains Mono';">SolTrace</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem; letter-spacing: 2px;">SECURE TERMINAL</p>
+      
+      <div id="auth-error" class="hidden" style="color: #fca5a5; font-size: 0.8rem; margin-bottom: 15px; background: rgba(220,38,38,0.1); padding: 8px; border-radius: 6px;"></div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px;">
+        <input type="text" id="auth-user" placeholder="Operator ID (Username)" style="text-align: center; font-size: 1rem; padding: 12px;" autocomplete="off">
+        <input type="password" id="auth-pass" placeholder="Passkey" style="text-align: center; font-size: 1rem; padding: 12px;">
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button id="btn-login" class="action-pill" style="flex: 1; justify-content: center; padding: 12px; background: transparent;">Login</button>
+        <button id="btn-register" class="action-pill" style="flex: 1; justify-content: center; padding: 12px; border-color: #9945FF; background: rgba(153,69,255,0.2); color: #fff;">Register</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 10: Tier Upgrade Modal -->
+  <div id="upgrade-modal" class="modal-overlay hidden" style="z-index: 9999;">
+    <div class="modal-content" style="max-width: 600px;">
+      <h2 style="font-weight: 700; margin-bottom: 5px; text-align: center;">Upgrade Hardware Nodes</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem; text-align: center;">Expand your maximum simultaneous node-scanning extraction limitations.</p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+         <div class="tier-card" style="border: 1px solid rgba(255,255,255,0.1); background: rgba(56, 189, 248, 0.05); border-radius: 12px; padding: 25px; text-align: center; cursor: pointer; transition: 0.3s;" onclick="upgradeTier('PRO')" onmouseover="this.style.borderColor='#38bdf8'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+            <h3 style="color: #38bdf8; font-family: 'JetBrains Mono'; margin-bottom: 10px; letter-spacing: 2px;">PRO TIER</h3>
+            <p style="font-size: 2.2rem; font-weight: 700; margin-bottom: 5px; color: #fff;">5,000</p>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Transactions Target Bounds</p>
+            <button class="action-pill" style="width: 100%; justify-content: center; margin-top: 20px; border-color: #38bdf8; color: #38bdf8;">Select PRO</button>
+         </div>
+         <div class="tier-card" style="border: 1px solid rgba(153,69,255,0.2); background: rgba(153, 69, 255, 0.05); border-radius: 12px; padding: 25px; text-align: center; cursor: pointer; transition: 0.3s;" onclick="upgradeTier('PLAT')" onmouseover="this.style.borderColor='#d838ff'" onmouseout="this.style.borderColor='rgba(153,69,255,0.2)'">
+            <h3 style="color: #d838ff; font-family: 'JetBrains Mono'; margin-bottom: 10px; letter-spacing: 2px;">PLATINUM</h3>
+            <p style="font-size: 2.2rem; font-weight: 700; margin-bottom: 5px; color: #fff;">10,000</p>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Transactions Target Bounds</p>
+            <button class="action-pill" style="width: 100%; justify-content: center; margin-top: 20px; border-color: #d838ff; background: rgba(153,69,255,0.1); color: #fff;">Select PLATINUM</button>
+         </div>
+      </div>
+      <div style="text-align: center;"><button class="toggle-btn" onclick="document.getElementById('upgrade-modal').classList.add('hidden')">Return to Terminal</button></div>
+    </div>
+  </div>
+
+  <!-- Phase 12: Omnipresent Tagging Modal -->
+  <div id="tag-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 400px; text-align: center; border-color: rgba(56, 189, 248, 0.5); box-shadow: 0 0 80px rgba(56,189,248,0.15);">
+      <h2 style="margin-bottom: 2rem; font-weight: 700;">Entity Tagging</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; font-family: 'JetBrains Mono';" id="tag-target-hash">...</p>
+      <input type="text" id="tag-input" placeholder="Enter Custom Alias (e.g. Scammer #1)" />
+      <div class="modal-actions" style="justify-content: center; width: 100%;">
+        <button id="btn-save-tag" class="action-btn" style="width: 100%;">Save Global Tag</button>
+      </div>
+      <button id="btn-cancel-tag" style="background: transparent; border: none; color: var(--text-muted); margin-top: 15px; cursor: pointer; font-size: 0.8rem; text-decoration: underline;">Cancel</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

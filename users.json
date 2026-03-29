@@ -1,0 +1,50 @@
+[
+  {
+    "id": "1774671576589",
+    "username": "test",
+    "password": "$2b$10$nuZ/MiSJ2iTrtJASsT5TQ.p9QjejGC8CN.vkOnQvwJm6pM4TY0uUy",
+    "tier": "FREE"
+  },
+  {
+    "id": "1774671610662",
+    "username": "zurh",
+    "password": "$2b$10$rz68UitT4pLOEwrLo7r48.J3wsLQKeZWGolZunqj/ly/2LWkY7Kb.",
+    "tier": "PLAT"
+  },
+  {
+    "id": "1774672111446",
+    "username": "test2",
+    "password": "$2b$10$hsHgyMApcoRyM3dDlqP2ke4Ac3ESlEkbNk5I2l2hajgJyYDGHVYf6",
+    "tier": "FREE"
+  },
+  {
+    "id": "1774672318704",
+    "username": "zurhj",
+    "password": "$2b$10$wMLUBPTBd7bkJOk7Q5cdZeXjzEhsi54W8GoMcQ38gPyWz9dLUgt3u",
+    "tier": "PLAT"
+  },
+  {
+    "id": "1774672333463",
+    "username": "nigga",
+    "password": "$2b$10$6EDi.Q7di8BY.ByLImgzGeXD5soqVhByCACdknsvNRl8NgcAGG3cW",
+    "tier": "PLAT"
+  },
+  {
+    "id": "1774672459426",
+    "username": "zurhn",
+    "password": "$2b$10$Cm28rDe0EFYFWutq8CrvBu7l6PyyLlc8X4boEL.O7eDZVYtrhTy7y",
+    "tier": "PLAT"
+  },
+  {
+    "id": "1774739103977",
+    "username": "zurh2332",
+    "password": "$2b$10$VO1JagP9V0NwtX8Y6hGMRehWeLkZ1WvSpOoYPVy4g0EZPUqnaonGK",
+    "tier": "PLAT"
+  },
+  {
+    "id": "1774749940931",
+    "username": "zurh123123",
+    "password": "$2b$10$hg3i4SAvExX.DC/a7TUt1O4bN7WO5dihigENgfpk0ja244NHtecui",
+    "tier": "FREE"
+  }
+]
