@@ -111,6 +111,18 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
     res.json({ success: true, username: req.user.username, tier: req.user.tier });
 });
 
+// Admin Diagnostic Endpoint to view all temporary Vercel accounts
+app.get('/api/admin/users', (req, res) => {
+    try {
+        const users = getUsers();
+        // Strip the hashed passwords from the readout for structural security
+        const safeList = users.map(u => ({ id: u.id, username: u.username, tier: u.tier }));
+        res.json({ success: true, count: safeList.length, users: safeList });
+    } catch(e) {
+        res.status(500).json({ error: "Failed to read users array" });
+    }
+});
+
 // Phase 5 API: Live Hardware Balances Endpoint
 app.get('/api/balances/:address', authenticateToken, async (req, res) => {
   const address = req.params.address;
