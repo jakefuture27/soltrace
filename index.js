@@ -34,11 +34,20 @@ loadJupiterTokens();
 
 // Phase 10: Auth Architecture
 const JWT_SECRET = process.env.JWT_SECRET || 'soltrace_super_secret_key_123';
-const USERS_FILE = path.join(__dirname, 'users.json');
+const isServerless = process.env.VERCEL || process.env.NODE_ENV === 'production' || process.env.RENDER;
+const USERS_FILE = isServerless ? '/tmp/users.json' : path.join(__dirname, 'users.json');
 
-if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, JSON.stringify([]));
-const getUsers = () => JSON.parse(fs.readFileSync(USERS_FILE));
-const saveUsers = (users) => fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+if (!fs.existsSync(USERS_FILE)) {
+    try { fs.writeFileSync(USERS_FILE, JSON.stringify([])); } catch(e) { console.warn("Could not write initial users.json", e); }
+}
+const getUsers = () => {
+    try { return JSON.parse(fs.readFileSync(USERS_FILE)); } 
+    catch(e) { return []; }
+};
+const saveUsers = (users) => {
+    try { fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2)); }
+    catch(e) { console.error("Failed to save user:", e); }
+};
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
